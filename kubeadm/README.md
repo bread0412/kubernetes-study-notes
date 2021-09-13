@@ -96,9 +96,12 @@ func newCmdInit(out io.Writer, initOptions *initOptions) *cobra.Command {
 	initRunner.AppendPhase(phases.NewBootstrapTokenPhase())
 	initRunner.AppendPhase(phases.NewKubeletFinalizePhase())
     initRunner.AppendPhase(phases.NewAddonPhase())
-    
+}
 ```
-![init workflow(本圖ref https://cloud.tencent.com/developer/article/1096515)]()
+
+- init workflow(ref https://cloud.tencent.com/developer/article/1096515)
+
+<img src="https://raw.githubusercontent.com/bread0412/kubernetes-study-notes/main/kubeadm/img/init.jpeg" width="80%" height="80%">
 
 
 ### kubeadm join 工作機制
@@ -107,8 +110,34 @@ func newCmdInit(out io.Writer, initOptions *initOptions) *cobra.Command {
     - 利用 token 檢驗 cluster info
     - 檢驗成功後，再與 api server 建立連接，請求 api server 為該 node 創建證書
     - 根據獲取到的證書創建 kubelet.conf
+```go
+// cmd/kubeadm/app/cmd/init.go
+// newCmdInit returns "kubeadm init" command.
+// NB. initOptions is exposed as parameter for allowing unit testing of
+//     the newInitOptions method, that implements all the command options validation logic
+func newCmdInit(out io.Writer, initOptions *initOptions) *cobra.Command {
 
-![join workflow(本圖ref https://cloud.tencent.com/developer/article/1096515)]()
+    // 省略
+    // initialize the workflow runner with the list of phases
+	initRunner.AppendPhase(phases.NewPreflightPhase())
+	initRunner.AppendPhase(phases.NewCertsPhase())
+	initRunner.AppendPhase(phases.NewKubeConfigPhase())
+	initRunner.AppendPhase(phases.NewKubeletStartPhase())
+	initRunner.AppendPhase(phases.NewControlPlanePhase())
+	initRunner.AppendPhase(phases.NewEtcdPhase())
+	initRunner.AppendPhase(phases.NewWaitControlPlanePhase())
+	initRunner.AppendPhase(phases.NewUploadConfigPhase())
+	initRunner.AppendPhase(phases.NewUploadCertsPhase())
+	initRunner.AppendPhase(phases.NewMarkControlPlanePhase())
+	initRunner.AppendPhase(phases.NewBootstrapTokenPhase())
+	initRunner.AppendPhase(phases.NewKubeletFinalizePhase())
+    initRunner.AppendPhase(phases.NewAddonPhase())
+}
+
+```
+- join workflow(ref https://cloud.tencent.com/developer/article/1096515)
+
+<img src="https://raw.githubusercontent.com/bread0412/kubernetes-study-notes/main/kubeadm/img/join.jpeg" width="80%" height="80%">
 
 
 
